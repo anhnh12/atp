@@ -1,0 +1,28 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "Áo Bảo Hộ",
+      "description": "Các loại áo bảo hộ lao động chất lượng cao, đạt tiêu chuẩn an toàn quốc tế. Phù hợp cho công nhân xây dựng, công nghiệp và các ngành nghề đòi hỏi trang bị bảo hộ.",
+      "thumbnail": "https://picsum.photos/400/300?random=10",
+      "created_at": "2024-01-15T10:00:00Z",
+      "updated_at": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Mũ Bảo Hộ",
+      "description": "Mũ bảo hộ lao động chống va đập, đạt tiêu chuẩn ANSI Z89.1 và EN 397. Bảo vệ đầu khỏi các tác động từ trên cao và các vật thể rơi.",
+      "thumbnail": "https://picsum.photos/400/300?random=11",
+      "created_at": "2024-01-15T10:00:00Z",
+      "updated_at": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": 3,
+      "name": "Giày Bảo Hộ",
+      "description": "Giày bảo hộ lao động mũi thép, đế chống trượt, chống đinh và các vật sắc nhọn. Đảm bảo an toàn cho đôi chân trong môi trường làm việc nguy hiểm.",
+      "thumbnail": "https://picsum.photos/400/300?random=12",
+      "created_at": "2024-01-15T10:00:00Z",
+      "updated_at": "2024-01-15T10:00:00Z"
+    }
+  ]
+}

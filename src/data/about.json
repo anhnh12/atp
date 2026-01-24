@@ -1,0 +1,94 @@
+{
+  "company": {
+    "name": "Công Ty TNHH Thiết Bị Bảo Hộ ATP",
+    "name_en": "ATP Safety Equipment Co., Ltd.",
+    "established": "2015",
+    "description": "ATP là công ty hàng đầu trong lĩnh vực cung cấp thiết bị bảo hộ lao động chất lượng cao tại Việt Nam. Với hơn 8 năm kinh nghiệm, chúng tôi cam kết mang đến những sản phẩm an toàn, đạt tiêu chuẩn quốc tế cho người lao động.",
+    "mission": "Cung cấp các thiết bị bảo hộ lao động chất lượng cao, đảm bảo an toàn cho người lao động và góp phần xây dựng môi trường làm việc an toàn, lành mạnh.",
+    "vision": "Trở thành nhà cung cấp thiết bị bảo hộ lao động hàng đầu tại Việt Nam và khu vực Đông Nam Á, được tin tưởng bởi các doanh nghiệp và người lao động.",
+    "values": [
+      {
+        "title": "Chất Lượng",
+        "description": "Cam kết cung cấp sản phẩm đạt tiêu chuẩn quốc tế, đảm bảo an toàn tuyệt đối cho người sử dụng."
+      },
+      {
+        "title": "Uy Tín",
+        "description": "Xây dựng niềm tin với khách hàng thông qua dịch vụ chuyên nghiệp và minh bạch trong mọi giao dịch."
+      },
+      {
+        "title": "Đổi Mới",
+        "description": "Không ngừng cập nhật công nghệ mới, sản phẩm mới để đáp ứng nhu cầu ngày càng cao của thị trường."
+      },
+      {
+        "title": "Trách Nhiệm",
+        "description": "Đặt an toàn của người lao động lên hàng đầu, góp phần giảm thiểu tai nạn lao động trong xã hội."
+      }
+    ]
+  },
+  "statistics": {
+    "years_experience": 8,
+    "products_sold": 50000,
+    "happy_customers": 2000,
+    "certifications": 15
+  },
+  "certifications": [
+    {
+      "name": "ISO 9001:2015",
+      "description": "Hệ thống quản lý chất lượng"
+    },
+    {
+      "name": "CE Marking",
+      "description": "Tiêu chuẩn Châu Âu"
+    },
+    {
+      "name": "ANSI/ISEA",
+      "description": "Tiêu chuẩn Mỹ về thiết bị bảo hộ"
+    },
+    {
+      "name": "EN Standards",
+      "description": "Tiêu chuẩn Châu Âu về an toàn"
+    }
+  ],
+  "services": [
+    {
+      "title": "Tư Vấn Miễn Phí",
+      "description": "Đội ngũ chuyên gia tư vấn giúp bạn lựa chọn sản phẩm phù hợp với nhu cầu và môi trường làm việc.",
+      "icon": "consultation"
+    },
+    {
+      "title": "Giao Hàng Nhanh",
+      "description": "Hệ thống logistics hiện đại, giao hàng toàn quốc trong 24-48 giờ, đảm bảo đúng hẹn.",
+      "icon": "delivery"
+    },
+    {
+      "title": "Bảo Hành Chính Hãng",
+      "description": "Tất cả sản phẩm đều có chế độ bảo hành chính hãng, hỗ trợ khách hàng tận tâm.",
+      "icon": "warranty"
+    },
+    {
+      "title": "Hỗ Trợ 24/7",
+      "description": "Đội ngũ chăm sóc khách hàng luôn sẵn sàng hỗ trợ bạn mọi lúc, mọi nơi.",
+      "icon": "support"
+    }
+  ],
+  "team": {
+    "description": "Đội ngũ nhân viên chuyên nghiệp, giàu kinh nghiệm và tận tâm với khách hàng.",
+    "members": [
+      {
+        "name": "Nguyễn Văn An",
+        "position": "Giám Đốc Điều Hành",
+        "experience": "15 năm kinh nghiệm trong ngành"
+      },
+      {
+        "name": "Trần Thị Bình",
+        "position": "Trưởng Phòng Kinh Doanh",
+        "experience": "10 năm phục vụ khách hàng"
+      },
+      {
+        "name": "Lê Minh Cường",
+        "position": "Trưởng Phòng Kỹ Thuật",
+        "experience": "12 năm chuyên về thiết bị bảo hộ"
+      }
+    ]
+  }
+}
