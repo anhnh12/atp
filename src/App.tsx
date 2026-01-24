@@ -168,8 +168,26 @@ const ProductsPage: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  // Get basename from PUBLIC_URL for GitHub Pages deployment
+  // In development, PUBLIC_URL is "." so basename will be undefined (serves from root)
+  // In production build with PUBLIC_URL=https://anhnh12.github.io/atp, basename will be "/atp"
+  const getBasename = () => {
+    if (process.env.PUBLIC_URL && process.env.PUBLIC_URL !== '.') {
+      try {
+        const url = new URL(process.env.PUBLIC_URL);
+        // Extract the pathname (e.g., "/atp" from "https://anhnh12.github.io/atp")
+        return url.pathname || undefined;
+      } catch {
+        // If PUBLIC_URL is not a valid URL, return undefined
+        return undefined;
+      }
+    }
+    // For local development (PUBLIC_URL is "."), return undefined (defaults to "/")
+    return undefined;
+  };
+
   return (
-    <Router>
+    <Router basename={getBasename()}>
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-grow">
