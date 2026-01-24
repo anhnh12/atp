@@ -4,8 +4,8 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProductList from './components/ProductList';
 import CategoryList from './components/CategoryList';
-import HeroCarousel from './components/HeroCarousel';
 import CategoryProducts from './components/CategoryProducts';
+import ProductDetail from './components/ProductDetail';
 import About from './components/About';
 import Contact from './components/Contact';
 import { loadProducts, loadCategories, searchProducts } from './data/dataMapper';
@@ -194,6 +194,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<ProductsPage />} />
             <Route path="/products" element={<ProductsPage />} />
+            <Route path="/products/:id" element={<ProductDetail />} />
             <Route
               path="/categories"
               element={
