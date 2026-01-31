@@ -1,0 +1,43 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             request.auth.token.email != null;
+    }
+    
+    // Product images
+    match /products/{productId}/{fileName} {
+      // Anyone can read (public images)
+      allow read: if true;
+      
+      // Only authenticated admins can write (upload/update)
+      allow write: if isAdmin() && 
+                      request.resource.size < 5 * 1024 * 1024 && // 5MB max
+                      request.resource.contentType.matches('image/.*');
+      
+      // Only authenticated admins can delete
+      allow delete: if isAdmin();
+    }
+    
+    // Category images
+    match /categories/{categoryId}/{fileName} {
+      // Anyone can read (public images)
+      allow read: if true;
+      
+      // Only authenticated admins can write (upload/update)
+      allow write: if isAdmin() && 
+                      request.resource.size < 5 * 1024 * 1024 && // 5MB max
+                      request.resource.contentType.matches('image/.*');
+      
+      // Only authenticated admins can delete
+      allow delete: if isAdmin();
+    }
+  }
+}

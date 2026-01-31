@@ -8,8 +8,15 @@ import CategoryProducts from './components/CategoryProducts';
 import ProductDetail from './components/ProductDetail';
 import About from './components/About';
 import Contact from './components/Contact';
+import AdminLogin from './components/admin/AdminLogin';
+import AdminDashboard from './components/admin/AdminDashboard';
+import CategoryManager from './components/admin/CategoryManager';
+import ProductManager from './components/admin/ProductManager';
+import AdminLayout from './components/admin/AdminLayout';
+import ProtectedRoute from './components/admin/ProtectedRoute';
 import { loadProducts, loadCategories, searchProducts } from './data/dataMapper';
 import { Product } from './types';
+import { isAdminSubdomain, getBasePath } from './utils/subdomain';
 
 const CategoryPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -168,42 +175,104 @@ const ProductsPage: React.FC = () => {
 };
 
 const App: React.FC = () => {
-  // Get basename from PUBLIC_URL for GitHub Pages deployment
-  // In development, PUBLIC_URL is "." so basename will be undefined (serves from root)
-  // In production build with PUBLIC_URL=https://anhnh12.github.io/atp, basename will be "/atp"
-  const getBasename = () => {
-    if (process.env.PUBLIC_URL && process.env.PUBLIC_URL !== '.') {
-      try {
-        const url = new URL(process.env.PUBLIC_URL);
-        // Extract the pathname (e.g., "/atp" from "https://anhnh12.github.io/atp")
-        return url.pathname || undefined;
-      } catch {
-        // If PUBLIC_URL is not a valid URL, return undefined
-        return undefined;
-      }
-    }
-    // For local development (PUBLIC_URL is "."), return undefined (defaults to "/")
-    return undefined;
-  };
+  // Check if we're on admin subdomain
+  const onAdminSubdomain = isAdminSubdomain();
+  
+  // Get basename for routing
+  const basename = getBasePath();
 
+  // If on admin subdomain, show only admin routes
+  if (onAdminSubdomain) {
+    return (
+      <Router basename={basename}>
+        <Routes>
+          <Route path="/" element={<AdminLogin />} />
+          <Route path="/login" element={<AdminLogin />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <AdminLayout>
+                  <AdminDashboard />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/categories"
+            element={
+              <ProtectedRoute>
+                <AdminLayout>
+                  <CategoryManager />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/products"
+            element={
+              <ProtectedRoute>
+                <AdminLayout>
+                  <ProductManager />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          {/* Redirect root to dashboard if logged in, login if not */}
+          <Route path="*" element={<AdminLogin />} />
+        </Routes>
+      </Router>
+    );
+  }
+
+  // Main website routes (localhost or main domain)
   return (
-    <Router basename={getBasename()}>
+    <Router basename={basename}>
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-grow">
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<ProductsPage />} />
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/products/:id" element={<ProductDetail />} />
-            <Route
-              path="/categories"
-              element={
-                <CategoriesPage />
-              }
-            />
+            <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/categories/:id" element={<CategoryPage />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            
+            {/* Admin Routes (path-based for localhost/main domain) */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminLayout>
+                    <AdminDashboard />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/categories"
+              element={
+                <ProtectedRoute>
+                  <AdminLayout>
+                    <CategoryManager />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/products"
+              element={
+                <ProtectedRoute>
+                  <AdminLayout>
+                    <ProductManager />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </main>
         <Footer />

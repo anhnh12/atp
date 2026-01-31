@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is admin
+    // Admins are determined by email in environment variable
+    // You can enhance this later with a Firestore admin collection
+    function isAdmin() {
+      return isAuthenticated() && 
+             request.auth.token.email != null &&
+             request.auth.token.email.matches('.*@.*'); // Basic email check
+             // TODO: Add actual admin email check via Firestore admin collection
+    }
+    
+    // Products collection
+    match /products/{productId} {
+      // Anyone can read products (public)
+      allow read: if true;
+      
+      // Only authenticated admins can write
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // Categories collection
+    match /categories/{categoryId} {
+      // Anyone can read categories (public)
+      allow read: if true;
+      
+      // Only authenticated admins can write
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}

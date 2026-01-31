@@ -2,30 +2,29 @@
   "company_name": "ATP Safety Equipment",
   "company_name_vi": "Công Ty Thiết Bị Bảo Hộ ATP",
   "address": {
-    "street": "123 Đường Nguyễn Văn Linh",
-    "ward": "Phường Bình Thuận",
-    "district": "Quận 7",
+    "street": "2/106 đường số 8",
+    "ward": "Phường Bình Hưng Hòa",
+    "district": "Quận Bình Tân",
     "city": "Thành phố Hồ Chí Minh",
     "country": "Việt Nam",
     "postal_code": "700000"
   },
   "contact": {
     "phone": {
-      "primary": "+84 28 1234 5678",
+      "primary": "(+84) 901 558 338",
       "mobile": "+84 912 345 678",
       "hotline": "1900 1234"
     },
     "email": {
-      "general": "info@atpsafety.vn",
+      "general": "anphatbhld2009@gmail.com",
       "sales": "sales@atpsafety.vn",
       "support": "support@atpsafety.vn"
     },
-    "website": "https://www.atpsafety.vn"
+    "website": "https://anphatsafetyvn.com"
   },
   "business_hours": {
     "weekdays": "08:00 - 17:30",
-    "saturday": "08:00 - 12:00",
-    "sunday": "Nghỉ",
+    "weekend": "08:00 - 12:00",
     "timezone": "Asia/Ho_Chi_Minh"
   },
   "social_media": {

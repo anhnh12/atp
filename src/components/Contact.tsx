@@ -27,8 +27,7 @@ interface ContactData {
   };
   business_hours: {
     weekdays: string;
-    saturday: string;
-    sunday: string;
+    weekend : string;
     timezone: string;
   };
   social_media: {
@@ -126,7 +125,6 @@ const Contact: React.FC = () => {
                 <div>
                   <h3 className="text-xl font-semibold text-gray-800 mb-2">Địa Chỉ</h3>
                   <p className="text-gray-600 leading-relaxed">{fullAddress}</p>
-                  <p className="text-gray-500 text-sm mt-1">Mã bưu điện: {data.address.postal_code}</p>
                 </div>
               </div>
             </div>
@@ -144,7 +142,7 @@ const Contact: React.FC = () => {
                         {data.contact.phone.primary}
                       </a>
                     </p>
-                    <p className="text-gray-600">
+                    {/* <p className="text-gray-600">
                       <span className="font-medium">Di động:</span>{' '}
                       <a href={`tel:${data.contact.phone.mobile}`} className="text-primary-600 hover:underline">
                         {data.contact.phone.mobile}
@@ -155,7 +153,7 @@ const Contact: React.FC = () => {
                       <a href={`tel:${data.contact.phone.hotline}`} className="text-primary-600 hover:underline">
                         {data.contact.phone.hotline}
                       </a>
-                    </p>
+                    </p> */}
                   </div>
                 </div>
               </div>
@@ -169,12 +167,12 @@ const Contact: React.FC = () => {
                   <h3 className="text-xl font-semibold text-gray-800 mb-3">Email</h3>
                   <div className="space-y-2">
                     <p className="text-gray-600">
-                      <span className="font-medium">Tổng đài:</span>{' '}
+                      <span className="font-medium">Hỗ trợ / Mua hàng:</span>{' '}
                       <a href={`mailto:${data.contact.email.general}`} className="text-primary-600 hover:underline">
                         {data.contact.email.general}
                       </a>
                     </p>
-                    <p className="text-gray-600">
+                    {/* <p className="text-gray-600">
                       <span className="font-medium">Bán hàng:</span>{' '}
                       <a href={`mailto:${data.contact.email.sales}`} className="text-primary-600 hover:underline">
                         {data.contact.email.sales}
@@ -185,7 +183,7 @@ const Contact: React.FC = () => {
                       <a href={`mailto:${data.contact.email.support}`} className="text-primary-600 hover:underline">
                         {data.contact.email.support}
                       </a>
-                    </p>
+                    </p> */}
                   </div>
                 </div>
               </div>
@@ -198,9 +196,8 @@ const Contact: React.FC = () => {
                 <div>
                   <h3 className="text-xl font-semibold text-gray-800 mb-3">Giờ Làm Việc</h3>
                   <div className="space-y-2 text-gray-600">
-                    <p><span className="font-medium">Thứ 2 - Thứ 6:</span> {data.business_hours.weekdays}</p>
-                    <p><span className="font-medium">Thứ 7:</span> {data.business_hours.saturday}</p>
-                    <p><span className="font-medium">Chủ Nhật:</span> {data.business_hours.sunday}</p>
+                    <p><span className="font-medium">T2 - T6:</span> {data.business_hours.weekdays}</p>
+                    <p><span className="font-medium">T7 - CN:</span> {data.business_hours.weekend}</p>
                   </div>
                 </div>
               </div>
