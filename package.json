@@ -26,7 +26,7 @@
   "scripts": {
     "start": "react-scripts start",
     "dev": "react-scripts start",
-    "build": "PUBLIC_URL=https://anhnh12.github.io/atp react-scripts build",
+    "build": "react-scripts build",
     "build:analyze": "npm run build && npx source-map-explorer 'build/static/js/*.js'",
     "test": "react-scripts test",
     "test:watch": "react-scripts test --watch",
