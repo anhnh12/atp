@@ -175,6 +175,24 @@ const ProductsPage: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  // Handle GitHub Pages 404.html redirect format: /?/path
+  // This happens when GitHub Pages can't find a file and serves 404.html
+  // The 404.html redirects to /?/path, and we need to extract the path
+  if (typeof window !== 'undefined') {
+    const search = window.location.search;
+    
+    // Check if URL is in format /?/path (from 404.html redirect)
+    if (search.startsWith('?/')) {
+      // Extract the path from query string
+      // Format: /?/products becomes /products
+      const redirectPath = '/' + search.slice(2).split('&')[0].replace(/~and~/g, '&');
+      const hash = window.location.hash;
+      
+      // Update URL without page reload
+      window.history.replaceState(null, '', redirectPath + hash);
+    }
+  }
+  
   // Check if we're on admin subdomain
   const onAdminSubdomain = isAdminSubdomain();
   
