@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, useParams, useSearchParams } fr
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProductList from './components/ProductList';
-import CategoryList from './components/CategoryList';
 import CategoryProducts from './components/CategoryProducts';
 import ProductDetail from './components/ProductDetail';
 import About from './components/About';
@@ -18,87 +17,6 @@ import { loadProducts, loadCategories, searchProducts } from './data/dataMapper'
 import { Product } from './types';
 import { isAdminSubdomain, getBasePath } from './utils/subdomain';
 
-const CategoryPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const categoryId = parseInt(id || '0', 10);
-  const [category, setCategory] = useState<any>(null);
-  const [categoryProducts, setCategoryProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadData = async () => {
-      const [loadedProducts, loadedCategories] = await Promise.all([
-        loadProducts(),
-        loadCategories(),
-      ]);
-      const foundCategory = loadedCategories.find((c) => c.id === categoryId);
-      const filtered = loadedProducts.filter((p) => p.categoryId === categoryId);
-      setCategory(foundCategory);
-      setCategoryProducts(filtered);
-      setLoading(false);
-    };
-    loadData();
-  }, [categoryId]);
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">Đang tải...</div>
-      </div>
-    );
-  }
-
-  if (!category) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">
-          Không tìm thấy danh mục
-        </h1>
-      </div>
-    );
-  }
-
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-4">
-        {category.name}
-      </h1>
-      <p className="text-gray-600 mb-8">{category.description}</p>
-      <ProductList products={categoryProducts} />
-    </div>
-  );
-};
-
-const CategoriesPage: React.FC = () => {
-  const [categories, setCategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadData = async () => {
-      const loadedCategories = await loadCategories();
-      setCategories(loadedCategories);
-      setLoading(false);
-    };
-    loadData();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">Đang tải...</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">
-        Tất Cả Danh Mục
-      </h1>
-      <CategoryList categories={categories} />
-    </div>
-  );
-};
 
 const ProductsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -246,55 +164,60 @@ const App: React.FC = () => {
   // Main website routes (localhost or main domain)
   return (
     <Router basename={basename}>
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <main className="flex-grow">
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<ProductsPage />} />
-            <Route path="/products" element={<ProductsPage />} />
-            <Route path="/products/:id" element={<ProductDetail />} />
-            <Route path="/categories" element={<CategoriesPage />} />
-            <Route path="/categories/:id" element={<CategoryPage />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            
-            {/* Admin Routes (path-based for localhost/main domain) */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute>
-                  <AdminLayout>
-                    <AdminDashboard />
-                  </AdminLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/categories"
-              element={
-                <ProtectedRoute>
-                  <AdminLayout>
-                    <CategoryManager />
-                  </AdminLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/products"
-              element={
-                <ProtectedRoute>
-                  <AdminLayout>
-                    <ProductManager />
-                  </AdminLayout>
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
+      <Routes>
+        {/* Public Routes */}
+        <Route
+          path="/*"
+          element={
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-grow">
+                <Routes>
+                  <Route path="/" element={<ProductsPage />} />
+                  <Route path="/products" element={<ProductsPage />} />
+                  <Route path="/products/:id" element={<ProductDetail />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                </Routes>
+              </main>
+              <Footer />
+            </div>
+          }
+        />
+        
+        {/* Admin Routes (path-based for localhost/main domain) - No Navbar/Footer */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/categories"
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <CategoryManager />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/products"
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <ProductManager />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
     </Router>
   );
 };

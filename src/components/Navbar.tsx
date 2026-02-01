@@ -36,12 +36,6 @@ const Navbar: React.FC = () => {
               Sản phẩm
             </Link>
             <Link
-              to="/categories"
-              className="text-gray-600 hover:text-primary-600 transition-colors duration-300"
-            >
-              Danh mục
-            </Link>
-            <Link
               to="/about"
               className="text-gray-600 hover:text-primary-600 transition-colors duration-300"
             >
@@ -76,12 +70,6 @@ const Navbar: React.FC = () => {
             className="block py-2 px-4 text-gray-600 hover:bg-gray-100 rounded-md"
           >
             Sản phẩm
-          </Link>
-          <Link
-            to="/categories"
-            className="block py-2 px-4 text-gray-600 hover:bg-gray-100 rounded-md"
-          >
-            Danh mục
           </Link>
           <Link
             to="/about"

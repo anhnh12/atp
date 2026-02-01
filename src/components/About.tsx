@@ -183,9 +183,9 @@ const About: React.FC = () => {
         {/* Services */}
         <section className="mb-16">
           <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Dịch Vụ Của Chúng Tôi</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="flex flex-wrap justify-center gap-6">
             {data.services.map((service, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow text-center">
+              <div key={index} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow text-center w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] max-w-sm">
                 <div className="text-primary-600 mb-4 flex justify-center">
                   {getServiceIcon(service.icon)}
                 </div>
@@ -197,7 +197,7 @@ const About: React.FC = () => {
         </section>
 
         {/* Certifications */}
-        <section className="mb-16">
+        {/* <section className="mb-16">
           <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Chứng Nhận & Tiêu Chuẩn</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {data.certifications.map((cert, index) => (
@@ -208,10 +208,10 @@ const About: React.FC = () => {
               </div>
             ))}
           </div>
-        </section>
+        </section> */}
 
         {/* Team */}
-        <section>
+        {/* <section>
           <h2 className="text-3xl font-bold text-gray-800 mb-4 text-center">Đội Ngũ</h2>
           <p className="text-gray-600 text-center mb-8">{data.team.description}</p>
           <div className="grid md:grid-cols-3 gap-6">
@@ -226,7 +226,7 @@ const About: React.FC = () => {
               </div>
             ))}
           </div>
-        </section>
+        </section> */}
       </div>
     </div>
   );

@@ -23,11 +23,6 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/categories" className="text-gray-400 hover:text-white">
-                  Danh Mục
-                </Link>
-              </li>
-              <li>
                 <Link to="/about" className="text-gray-400 hover:text-white">
                   Giới Thiệu
                 </Link>

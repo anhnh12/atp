@@ -11,14 +11,12 @@ import {
   Timestamp 
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
-import { uploadMultipleImages, deleteImage } from '../../utils/imageUpload';
-import { FiEdit, FiTrash2, FiArrowLeft, FiX } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiArrowLeft } from 'react-icons/fi';
 
 interface Category {
   id: string;
   name: string;
   description: string;
-  thumbnail: string;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 }
@@ -31,9 +29,7 @@ const CategoryManager: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    thumbnail: '',
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     loadCategories();
@@ -50,7 +46,6 @@ const CategoryManager: React.FC = () => {
           id: doc.id, // Firestore document ID (string)
           name: data.name || '',
           description: data.description || '',
-          thumbnail: data.thumbnail || '',
           created_at: data.created_at,
           updated_at: data.updated_at,
         };
@@ -76,24 +71,6 @@ const CategoryManager: React.FC = () => {
         return;
       }
       
-      let thumbnailUrl = formData.thumbnail || '';
-      
-      // Upload new image if provided
-      if (imageFile) {
-        try {
-          const categoryId = editingId || 'temp';
-          const uploadedUrls = await uploadMultipleImages([imageFile], `categories/${categoryId}`);
-          if (uploadedUrls.length > 0) {
-            thumbnailUrl = uploadedUrls[0];
-          }
-        } catch (uploadError) {
-          console.error('Error uploading image:', uploadError);
-          alert('Lỗi khi tải lên hình ảnh: ' + (uploadError as Error).message);
-          setUploading(false);
-          return;
-        }
-      }
-      
       if (editingId) {
         // Update existing category
         const categoryRef = doc(db, 'categories', editingId);
@@ -105,36 +82,18 @@ const CategoryManager: React.FC = () => {
           return;
         }
         
-        const existingData = categoryDoc.data();
-        
-        // Delete old image if it was replaced and is a Firebase Storage URL
-        if (existingData?.thumbnail && 
-            existingData.thumbnail !== thumbnailUrl && 
-            typeof existingData.thumbnail === 'string' &&
-            existingData.thumbnail.includes('firebasestorage.googleapis.com')) {
-          try {
-            await deleteImage(existingData.thumbnail);
-          } catch (error) {
-            console.warn('Error deleting old category image:', error);
-            // Continue with update even if old image deletion fails
-          }
-        }
-        
         // Update existing category
         await updateDoc(categoryRef, {
           name: formData.name.trim(),
           description: formData.description.trim(),
-          thumbnail: thumbnailUrl,
           updated_at: Timestamp.now(),
         });
         alert('Cập nhật danh mục thành công!');
       } else {
         // Add new category - Firebase will auto-generate document ID
-        // Note: We don't need the numeric 'id' field anymore since we use Firestore doc IDs
         await addDoc(collection(db, 'categories'), {
           name: formData.name.trim(),
           description: formData.description.trim(),
-          thumbnail: thumbnailUrl,
           created_at: Timestamp.now(),
           updated_at: Timestamp.now(),
         });
@@ -172,7 +131,6 @@ const CategoryManager: React.FC = () => {
     setFormData({
       name: category.name,
       description: category.description,
-      thumbnail: category.thumbnail,
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -182,20 +140,6 @@ const CategoryManager: React.FC = () => {
       return;
     }
     try {
-      // Delete image from storage if it's a Firebase Storage URL
-      const thumbnail = category?.thumbnail;
-      if (thumbnail && 
-          typeof thumbnail === 'string' && 
-          thumbnail.trim() !== '' &&
-          thumbnail.indexOf('firebasestorage.googleapis.com') !== -1) {
-        try {
-          await deleteImage(thumbnail);
-        } catch (error) {
-          console.warn('Error deleting category image (continuing with category deletion):', error);
-          // Continue with deletion even if image deletion fails
-        }
-      }
-      
       // Ensure category.id is a string (Firestore document ID)
       const categoryId = typeof category.id === 'string' ? category.id : String(category.id);
       
@@ -210,27 +154,12 @@ const CategoryManager: React.FC = () => {
     }
   };
 
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      // Clear URL input when file is selected
-      setFormData({ ...formData, thumbnail: '' });
-    }
-  };
-
-  const removeImageFile = () => {
-    setImageFile(null);
-  };
-
   const resetForm = () => {
     setEditingId(null);
     setFormData({
       name: '',
       description: '',
-      thumbnail: '',
     });
-    setImageFile(null);
   };
 
   if (loading) {
@@ -287,76 +216,6 @@ const CategoryManager: React.FC = () => {
             />
           </div>
 
-          {/* Image Upload */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Hình ảnh danh mục
-            </label>
-            
-            {/* File Upload */}
-            <div className="mb-2">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageFileChange}
-                className="hidden"
-                id="category-image-upload"
-              />
-              <label
-                htmlFor="category-image-upload"
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
-              >
-                Chọn hình ảnh
-              </label>
-              {imageFile && (
-                <span className="ml-3 text-sm text-gray-600">{imageFile.name}</span>
-              )}
-              <p className="mt-1 text-xs text-gray-500">
-                Kích thước tối đa: 5MB.
-              </p>
-            </div>
-
-            {/* Image Preview */}
-            {imageFile && (
-              <div className="mb-4 relative inline-block">
-                <img
-                  src={URL.createObjectURL(imageFile)}
-                  alt="Preview"
-                  className="h-32 w-32 object-cover rounded border border-gray-300"
-                />
-                <button
-                  type="button"
-                  onClick={removeImageFile}
-                  className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                >
-                  <FiX className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-
-            {/* Existing Image - Only show when editing and no new file selected */}
-            {!imageFile && formData.thumbnail && (
-              <div className="mb-2 relative inline-block">
-                <img
-                  src={formData.thumbnail}
-                  alt="Category thumbnail"
-                  className="h-32 w-32 object-cover rounded border border-gray-300"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, thumbnail: '' })}
-                  className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                >
-                  <FiX className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-          </div>
-
           <div className="flex space-x-4">
             <button
               type="submit"
@@ -395,9 +254,6 @@ const CategoryManager: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Mô tả
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Hình ảnh
-                </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Thao tác
                 </th>
@@ -415,21 +271,6 @@ const CategoryManager: React.FC = () => {
                     <div className="text-sm text-gray-500 max-w-md truncate">
                       {category.description || '-'}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {category.thumbnail ? (
-                      <img
-                        src={category.thumbnail}
-                        alt={category.name}
-                        className="h-12 w-12 object-cover rounded"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <span className="text-gray-400 text-sm">-</span>
-                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end space-x-2">

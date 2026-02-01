@@ -2,10 +2,10 @@
   "company": {
     "name": "Công Ty TNHH Thiết Bị Bảo Hộ ATP",
     "name_en": "ATP Safety Equipment Co., Ltd.",
-    "established": "2015",
+    "established": "2009",
     "description": "ATP là công ty hàng đầu trong lĩnh vực cung cấp thiết bị bảo hộ lao động chất lượng cao tại Việt Nam. Với hơn 8 năm kinh nghiệm, chúng tôi cam kết mang đến những sản phẩm an toàn, đạt tiêu chuẩn quốc tế cho người lao động.",
     "mission": "Cung cấp các thiết bị bảo hộ lao động chất lượng cao, đảm bảo an toàn cho người lao động và góp phần xây dựng môi trường làm việc an toàn, lành mạnh.",
-    "vision": "Trở thành nhà cung cấp thiết bị bảo hộ lao động hàng đầu tại Việt Nam và khu vực Đông Nam Á, được tin tưởng bởi các doanh nghiệp và người lao động.",
+    "vision": "Trở thành nhà cung cấp thiết bị bảo hộ lao động hàng đầu tại Việt Nam, được tin tưởng bởi các doanh nghiệp và người lao động.",
     "values": [
       {
         "title": "Chất Lượng",
@@ -64,11 +64,6 @@
       "title": "Bảo Hành Chính Hãng",
       "description": "Tất cả sản phẩm đều có chế độ bảo hành chính hãng, hỗ trợ khách hàng tận tâm.",
       "icon": "warranty"
-    },
-    {
-      "title": "Hỗ Trợ 24/7",
-      "description": "Đội ngũ chăm sóc khách hàng luôn sẵn sàng hỗ trợ bạn mọi lúc, mọi nơi.",
-      "icon": "support"
     }
   ],
   "team": {

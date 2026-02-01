@@ -22,14 +22,13 @@ import { normalizeForSearch } from '../utils/vietnamese';
 interface FirestoreProduct {
   id?: string;
   category_id: string; // Now uses Firestore document ID (string)
-  product_code: string;
   name: string;
   description: string;
-  quantity: number;
-  price: number;
+  inStock?: boolean; // Whether product is in stock (optional for backward compatibility)
+  quantity?: number; // Old field for backward compatibility (if inStock is not present)
+  price?: number; // Optional price
   views_count: number;
   images: Array<{ id: number; url: string }>;
-  tags: string[];
   created_at?: Timestamp;
   updated_at?: Timestamp;
 }
@@ -39,7 +38,6 @@ interface FirestoreCategory {
   id?: string;
   name: string;
   description: string;
-  thumbnail: string;
   created_at?: Timestamp;
   updated_at?: Timestamp;
 }
@@ -64,27 +62,31 @@ function docIdToNumber(docId: string): number {
  * Maps Firestore product to frontend Product type
  */
 function mapFirestoreProductToProduct(firestoreProduct: FirestoreProduct, docId: string): Product {
-  // Calculate rating and reviews from views_count
-  const baseRating = 4.0;
-  const ratingVariation = (firestoreProduct.views_count % 10) / 10;
-  const rating = Math.min(5.0, baseRating + ratingVariation);
-  const reviews = Math.floor(firestoreProduct.views_count * 0.08);
-
   // category_id is now a Firestore document ID (string), convert to number for frontend
   const categoryIdNumber = typeof firestoreProduct.category_id === 'string' 
     ? docIdToNumber(firestoreProduct.category_id)
     : firestoreProduct.category_id;
 
+  // Handle backward compatibility: check for inStock boolean first, then fall back to quantity
+  let inStock = false;
+  if (firestoreProduct.inStock !== undefined) {
+    // New format: boolean inStock field
+    inStock = firestoreProduct.inStock;
+  } else if ((firestoreProduct as any).quantity !== undefined) {
+    // Old format: quantity field - if quantity > 0, then in stock
+    inStock = (firestoreProduct as any).quantity > 0;
+  }
+
   return {
     id: docIdToNumber(docId), // Convert Firestore string ID to numeric ID
     name: firestoreProduct.name,
     description: firestoreProduct.description,
-    price: firestoreProduct.price,
+    price: firestoreProduct.price || 0, // Default to 0 if not provided
     image: firestoreProduct.images?.[0]?.url || '',
     categoryId: categoryIdNumber, // Convert Firestore doc ID to number for frontend
-    stock: firestoreProduct.quantity,
-    rating: Math.round(rating * 10) / 10,
-    reviews: Math.max(0, reviews),
+    stock: inStock ? 1 : 0, // Convert boolean to number (1 = in stock, 0 = out of stock)
+    rating: 0, // No hardcoded ratings
+    reviews: 0, // No hardcoded reviews
   };
 }
 
@@ -100,7 +102,7 @@ function mapFirestoreCategoryToCategory(
     id: docIdToNumber(docId), // Convert Firestore string ID to numeric ID
     name: firestoreCategory.name,
     description: firestoreCategory.description,
-    image: firestoreCategory.thumbnail,
+    image: '', // No longer using category images
     productCount: productCount,
   };
 }
@@ -159,12 +161,12 @@ export async function loadCategories(): Promise<Category[]> {
       
       // Get product count using the Firestore doc ID
       const productCount = productCounts[firestoreDocId] || 0;
-      
+
       return {
         id: categoryIdNumber, // Numeric ID for frontend compatibility
         name: data.name,
         description: data.description,
-        image: data.thumbnail,
+        image: '', // No longer using category images
         productCount: productCount,
       };
     });
@@ -175,7 +177,7 @@ export async function loadCategories(): Promise<Category[]> {
 }
 
 /**
- * Gets a single product by ID
+ * Gets a single product by ID with all images
  * Note: Since we're converting Firestore string IDs to numeric IDs,
  * we need to load all products and find by the converted ID
  */
@@ -185,6 +187,32 @@ export async function getProductById(id: number): Promise<Product | null> {
     return products.find((p) => p.id === id) || null;
   } catch (error) {
     console.error('Error getting product by ID:', error);
+    return null;
+  }
+}
+
+/**
+ * Gets a product with all images from Firestore
+ */
+export async function getProductWithImages(id: number): Promise<{ product: Product; images: string[] } | null> {
+  try {
+    const snapshot = await getDocs(collection(db, 'products'));
+    const productDoc = snapshot.docs.find((doc) => {
+      const numericId = docIdToNumber(doc.id);
+      return numericId === id;
+    });
+    
+    if (!productDoc) {
+      return null;
+    }
+    
+    const firestoreProduct = productDoc.data() as FirestoreProduct;
+    const product = mapFirestoreProductToProduct(firestoreProduct, productDoc.id);
+    const images = firestoreProduct.images?.map(img => img.url) || [];
+    
+    return { product, images };
+  } catch (error) {
+    console.error('Error getting product with images:', error);
     return null;
   }
 }

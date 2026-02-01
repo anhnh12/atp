@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { FaStar, FaArrowLeft, FaCheckCircle } from 'react-icons/fa';
-import { getProductById, loadCategories } from '../data/dataMapper';
+import { FaArrowLeft, FaCheckCircle, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { getProductById, getProductWithImages, loadCategories } from '../data/dataMapper';
 import { Product } from '../types';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
+  const [images, setImages] = useState<string[]>([]);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [category, setCategory] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,19 +30,21 @@ const ProductDetail: React.FC = () => {
           return;
         }
 
-        const [loadedProduct, categories] = await Promise.all([
-          getProductById(productId),
+        const [productData, categories] = await Promise.all([
+          getProductWithImages(productId),
           loadCategories(),
         ]);
 
-        if (!loadedProduct) {
+        if (!productData) {
           setError('Không tìm thấy sản phẩm');
           setLoading(false);
           return;
         }
 
-        setProduct(loadedProduct);
-        const foundCategory = categories.find((c) => c.id === loadedProduct.categoryId);
+        setProduct(productData.product);
+        setImages(productData.images.length > 0 ? productData.images : [productData.product.image]);
+        setSelectedImageIndex(0);
+        const foundCategory = categories.find((c) => c.id === productData.product.categoryId);
         setCategory(foundCategory);
         setLoading(false);
       } catch (err) {
@@ -51,6 +55,24 @@ const ProductDetail: React.FC = () => {
 
     loadProduct();
   }, [id]);
+
+  // Keyboard navigation for image carousel
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (images.length <= 1) return;
+      
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setSelectedImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setSelectedImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [images.length]);
 
   if (loading) {
     return (
@@ -93,38 +115,99 @@ const ProductDetail: React.FC = () => {
       </button>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Product Image */}
+        {/* Product Images Carousel */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="relative aspect-square bg-gray-100">
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = 'https://via.placeholder.com/500?text=No+Image';
-              }}
-            />
-            {product.stock < 10 && product.stock > 0 && (
+          {/* Main Image */}
+          <div className="relative aspect-square bg-gray-100 overflow-hidden">
+            {images.length > 0 ? (
+              <>
+                <img
+                  src={images[selectedImageIndex]}
+                  alt={product.name}
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = 'https://via.placeholder.com/500?text=No+Image';
+                  }}
+                />
+                {/* Navigation Arrows */}
+                {images.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setSelectedImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-50 rounded-full p-3 shadow-xl border-2 border-gray-200 transition-all hover:scale-110"
+                      aria-label="Previous image"
+                    >
+                      <FaChevronLeft className="w-6 h-6 text-gray-900" />
+                    </button>
+                    <button
+                      onClick={() => setSelectedImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-50 rounded-full p-3 shadow-xl border-2 border-gray-200 transition-all hover:scale-110"
+                      aria-label="Next image"
+                    >
+                      <FaChevronRight className="w-6 h-6 text-gray-900" />
+                    </button>
+                  </>
+                )}
+              </>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-400">
+                Không có hình ảnh
+              </div>
+            )}
+            {product.stock === 0 && (
               <div className="absolute top-4 right-4">
                 <span className="bg-red-500 text-white text-sm px-3 py-1 rounded-full">
-                  Sắp hết hàng
+                  Hết hàng
+                </span>
+              </div>
+            )}
+            {product.stock > 0 && (
+              <div className="absolute top-4 right-4">
+                <span className="bg-green-500 text-white text-sm px-3 py-1 rounded-full">
+                  Còn hàng
                 </span>
               </div>
             )}
           </div>
+          
+          {/* Thumbnail Gallery */}
+          {images.length > 1 && (
+            <div className="p-4 border-t border-gray-200">
+              <div className="flex gap-2 overflow-x-auto">
+                {images.map((img, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={`flex-shrink-0 w-20 h-20 rounded overflow-hidden border-2 transition-all ${
+                      selectedImageIndex === index
+                        ? 'border-primary-600 ring-2 ring-primary-300'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`${product.name} ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://via.placeholder.com/80?text=No+Image';
+                      }}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Product Info */}
         <div className="space-y-6">
           {/* Category */}
           {category && (
-            <Link
-              to={`/categories/${category.id}`}
-              className="inline-block text-primary-600 hover:text-primary-700 text-sm font-medium"
-            >
+            <span className="inline-block text-primary-600 text-sm font-medium">
               {category.name}
-            </Link>
+            </span>
           )}
 
           {/* Product Name */}
@@ -132,35 +215,16 @@ const ProductDetail: React.FC = () => {
             {product.name}
           </h1>
 
-          {/* Rating */}
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center">
-              <div className="flex items-center text-yellow-400">
-                {[...Array(5)].map((_, index) => (
-                  <FaStar
-                    key={index}
-                    className={
-                      index < Math.floor(product.rating)
-                        ? 'text-yellow-400'
-                        : 'text-gray-300'
-                    }
-                  />
-                ))}
-              </div>
-              <span className="ml-2 text-gray-600">
-                {product.rating.toFixed(1)} ({product.reviews} đánh giá)
-              </span>
-            </div>
-          </div>
-
           {/* Price */}
-          <div className="border-t border-b border-gray-200 py-6">
-            <div className="flex items-baseline space-x-2">
-              <span className="text-4xl font-bold text-primary-600">
-                {product.price.toLocaleString('vi-VN')}đ
-              </span>
+          {product.price > 0 && (
+            <div className="border-t border-b border-gray-200 py-6">
+              <div className="flex items-baseline space-x-2">
+                <span className="text-4xl font-bold text-primary-600">
+                  {product.price.toLocaleString('vi-VN')}đ
+                </span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Stock Status */}
           <div className="flex items-center space-x-2">
@@ -168,7 +232,7 @@ const ProductDetail: React.FC = () => {
               <>
                 <FaCheckCircle className="text-green-500" />
                 <span className="text-green-600 font-medium">
-                  Còn {product.stock} sản phẩm
+                  Còn hàng
                 </span>
               </>
             ) : (
@@ -226,12 +290,6 @@ const ProductDetail: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-800">
               Sản phẩm cùng danh mục
             </h2>
-            <Link
-              to={`/categories/${category.id}`}
-              className="text-primary-600 hover:text-primary-700 font-medium"
-            >
-              Xem tất cả →
-            </Link>
           </div>
         </div>
       )}

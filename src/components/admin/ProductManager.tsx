@@ -14,19 +14,16 @@ import {
 import { db } from '../../config/firebase';
 import { uploadMultipleImages, deleteImage } from '../../utils/imageUpload';
 import { FiEdit, FiTrash2, FiArrowLeft, FiX } from 'react-icons/fi';
-import TagInput from './TagInput';
 
 interface Product {
   id: string;
   category_id: string; // Firestore document ID (string)
-  product_code: string;
   name: string;
   description: string;
-  quantity: number;
-  price: number;
+  inStock: boolean; // Whether product is in stock
+  price?: number; // Optional price
   views_count: number;
   images: Array<{ id: number; url: string }>;
-  tags: string[];
   created_at?: Timestamp;
   updated_at?: Timestamp;
 }
@@ -44,13 +41,11 @@ const ProductManager: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     category_id: '',
-    product_code: '',
     name: '',
     description: '',
-    quantity: 0,
+    inStock: true, // Default to in stock
     price: 0,
     priceDisplay: '', // For formatted display
-    tags: [] as string[],
     images: [] as string[],
   });
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -161,20 +156,22 @@ const ProductManager: React.FC = () => {
       const priceValue = parseFloat(formData.priceDisplay.replace(/,/g, '')) || formData.price;
 
       // Prepare product data
-      const productData = {
+      const productData: any = {
         category_id: categoryId, // Use Firestore document ID
-        product_code: formData.product_code,
-        name: formData.name,
-        description: formData.description,
-        quantity: formData.quantity,
-        price: priceValue,
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        inStock: formData.inStock,
         views_count: editingId 
           ? products.find((p) => p.id === editingId)?.views_count || 0
           : 0,
         images,
-        tags: formData.tags,
         updated_at: Timestamp.now(),
       };
+      
+      // Only include price if it's provided and greater than 0
+      if (priceValue > 0) {
+        productData.price = priceValue;
+      }
 
       if (editingId) {
         // Update existing product
@@ -208,13 +205,11 @@ const ProductManager: React.FC = () => {
     
     setFormData({
       category_id: category?.id || '', // Use Firestore document ID for dropdown
-      product_code: product.product_code,
       name: product.name,
       description: product.description,
-      quantity: product.quantity,
-      price: product.price,
-      priceDisplay: formatPriceFromNumber(product.price),
-      tags: product.tags || [],
+      inStock: product.inStock !== undefined ? product.inStock : true,
+      price: product.price || 0,
+      priceDisplay: product.price ? formatPriceFromNumber(product.price) : '',
       images: product.images.map((img) => img.url),
     });
     setImageFiles([]);
@@ -249,13 +244,11 @@ const ProductManager: React.FC = () => {
     setEditingId(null);
     setFormData({
       category_id: '',
-      product_code: '',
       name: '',
       description: '',
-      quantity: 0,
+      inStock: true,
       price: 0,
       priceDisplay: '',
-      tags: [],
       images: [],
     });
     setImageFiles([]);
@@ -319,39 +312,23 @@ const ProductManager: React.FC = () => {
           {editingId ? 'Chỉnh sửa Sản phẩm' : 'Thêm Sản phẩm Mới'}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Danh mục *
-              </label>
-              <select
-                required
-                value={formData.category_id}
-                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                <option value="">Chọn danh mục</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Mã sản phẩm *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.product_code}
-                onChange={(e) => setFormData({ ...formData, product_code: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Ví dụ: ABH-001"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Danh mục *
+            </label>
+            <select
+              required
+              value={formData.category_id}
+              onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="">Chọn danh mục</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -381,44 +358,35 @@ const ProductManager: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Số lượng *
-              </label>
-              <input
-                type="number"
-                required
-                min="0"
-                value={formData.quantity}
-                onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Giá (VNĐ) *
+                Giá (VNĐ)
               </label>
               <input
                 type="text"
-                required
                 value={formData.priceDisplay}
                 onChange={handlePriceChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="1,000,000"
+                placeholder="1,000,000 (tùy chọn)"
               />
+              <p className="mt-1 text-xs text-gray-500">
+                Để trống nếu sản phẩm không có giá
+              </p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tags
+            <div className="flex items-center">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.inStock}
+                  onChange={(e) => setFormData({ ...formData, inStock: e.target.checked })}
+                  className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Còn hàng
+                </span>
               </label>
-              <TagInput
-                tags={formData.tags}
-                onChange={(tags) => setFormData({ ...formData, tags })}
-                placeholder="Nhập tag và nhấn Enter, Tab hoặc dấu phẩy"
-              />
             </div>
           </div>
 
@@ -438,46 +406,39 @@ const ProductManager: React.FC = () => {
               Có thể chọn nhiều hình ảnh. Kích thước tối đa: 5MB mỗi hình.
             </p>
 
-            {/* Preview new images */}
-            {imageFiles.length > 0 && (
+            {/* All images (existing + new) */}
+            {(formData.images.length > 0 || imageFiles.length > 0) && (
               <div className="mt-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">Hình ảnh mới:</p>
+                <p className="text-sm font-medium text-gray-700 mb-2">Hình ảnh sản phẩm:</p>
                 <div className="grid grid-cols-4 gap-4">
-                  {imageFiles.map((file, index) => (
-                    <div key={index} className="relative">
+                  {/* Existing images */}
+                  {formData.images.map((url, index) => (
+                    <div key={`existing-${index}`} className="relative overflow-hidden rounded">
                       <img
-                        src={URL.createObjectURL(file)}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-32 object-cover rounded"
+                        src={url}
+                        alt={`Image ${index + 1}`}
+                        className="w-full h-32 object-cover"
                       />
                       <button
                         type="button"
-                        onClick={() => removeImageFile(index)}
+                        onClick={() => removeImageUrl(index)}
                         className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                       >
                         <FiX className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
-                </div>
-              </div>
-            )}
-
-            {/* Existing images */}
-            {formData.images.length > 0 && (
-              <div className="mt-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">Hình ảnh hiện có:</p>
-                <div className="grid grid-cols-4 gap-4">
-                  {formData.images.map((url, index) => (
-                    <div key={index} className="relative">
+                  {/* New images */}
+                  {imageFiles.map((file, index) => (
+                    <div key={`new-${index}`} className="relative overflow-hidden rounded">
                       <img
-                        src={url}
-                        alt={`Image ${index + 1}`}
-                        className="w-full h-32 object-cover rounded"
+                        src={URL.createObjectURL(file)}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-32 object-cover"
                       />
                       <button
                         type="button"
-                        onClick={() => removeImageUrl(index)}
+                        onClick={() => removeImageFile(index)}
                         className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                       >
                         <FiX className="w-4 h-4" />
@@ -534,7 +495,7 @@ const ProductManager: React.FC = () => {
                   Giá
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Số lượng
+                  Trạng thái
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Thao tác
@@ -546,15 +507,17 @@ const ProductManager: React.FC = () => {
                 <tr key={product.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     {product.images && product.images.length > 0 ? (
-                      <img
-                        src={product.images[0].url}
-                        alt={product.name}
-                        className="h-16 w-16 object-cover rounded"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = 'https://via.placeholder.com/64?text=No+Image';
-                        }}
-                      />
+                      <div className="h-16 w-16 rounded overflow-hidden">
+                        <img
+                          src={product.images[0].url}
+                          alt={product.name}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = 'https://via.placeholder.com/64?text=No+Image';
+                          }}
+                        />
+                      </div>
                     ) : (
                       <span className="text-gray-400 text-sm">-</span>
                     )}
@@ -562,9 +525,6 @@ const ProductManager: React.FC = () => {
                   <td className="px-6 py-4">
                     <div className="text-sm font-medium text-gray-900">
                       {product.name}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {product.product_code}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -574,11 +534,17 @@ const ProductManager: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                      {product.price.toLocaleString('vi-VN')}đ
+                      {product.price ? `${product.price.toLocaleString('vi-VN')}đ` : '-'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{product.quantity}</div>
+                    <div className="text-sm text-gray-900">
+                      {product.inStock ? (
+                        <span className="text-green-600 font-medium">Còn hàng</span>
+                      ) : (
+                        <span className="text-red-600 font-medium">Hết hàng</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end space-x-2">
