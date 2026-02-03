@@ -77,12 +77,14 @@ function mapFirestoreProductToProduct(firestoreProduct: FirestoreProduct, docId:
     inStock = (firestoreProduct as any).quantity > 0;
   }
 
+  const imageUrls = firestoreProduct.images?.map((img) => img.url) ?? [];
   return {
     id: docIdToNumber(docId), // Convert Firestore string ID to numeric ID
     name: firestoreProduct.name,
     description: firestoreProduct.description,
     price: firestoreProduct.price || 0, // Default to 0 if not provided
-    image: firestoreProduct.images?.[0]?.url || '',
+    image: imageUrls[0] || '',
+    images: imageUrls.length > 0 ? imageUrls : undefined,
     categoryId: categoryIdNumber, // Convert Firestore doc ID to number for frontend
     stock: inStock ? 1 : 0, // Convert boolean to number (1 = in stock, 0 = out of stock)
     rating: 0, // No hardcoded ratings

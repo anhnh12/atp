@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FiHome, FiPackage, FiTag } from 'react-icons/fi';
+import { FiHome, FiPackage } from 'react-icons/fi';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -27,13 +27,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             >
               <FiHome />
               <span>Tổng quan</span>
-            </Link>
-            <Link
-              to={window.location.hostname.startsWith('admin.') ? '/categories' : '/admin/categories'}
-              className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <FiTag />
-              <span>Danh mục</span>
             </Link>
             <Link
               to={window.location.hostname.startsWith('admin.') ? '/products' : '/admin/products'}

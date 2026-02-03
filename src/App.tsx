@@ -9,7 +9,6 @@ import About from './components/About';
 import Contact from './components/Contact';
 import AdminLogin from './components/admin/AdminLogin';
 import AdminDashboard from './components/admin/AdminDashboard';
-import CategoryManager from './components/admin/CategoryManager';
 import ProductManager from './components/admin/ProductManager';
 import AdminLayout from './components/admin/AdminLayout';
 import ProtectedRoute from './components/admin/ProtectedRoute';
@@ -135,16 +134,6 @@ const App: React.FC = () => {
             }
           />
           <Route
-            path="/categories"
-            element={
-              <ProtectedRoute>
-                <AdminLayout>
-                  <CategoryManager />
-                </AdminLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/products"
             element={
               <ProtectedRoute>
@@ -193,16 +182,6 @@ const App: React.FC = () => {
             <ProtectedRoute>
               <AdminLayout>
                 <AdminDashboard />
-              </AdminLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/categories"
-          element={
-            <ProtectedRoute>
-              <AdminLayout>
-                <CategoryManager />
               </AdminLayout>
             </ProtectedRoute>
           }

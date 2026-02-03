@@ -64,11 +64,8 @@ const AdminDashboard: React.FC = () => {
           </div>
         </Link>
 
-        {/* Categories Card */}
-        <Link
-          to={window.location.hostname.startsWith('admin.') ? '/categories' : '/admin/categories'}
-          className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
-        >
+        {/* Categories Card (display only; categories managed from product form) */}
+        <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm font-medium">Tổng danh mục</p>
@@ -80,7 +77,7 @@ const AdminDashboard: React.FC = () => {
               <FiTag className="w-8 h-8 text-green-600" />
             </div>
           </div>
-        </Link>
+        </div>
 
         {/* Quick Actions Card */}
         <div className="bg-white rounded-lg shadow-md p-6">
@@ -103,19 +100,16 @@ const AdminDashboard: React.FC = () => {
         <h2 className="text-xl font-semibold text-gray-800 mb-4">
           Thao tác nhanh
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="flex flex-wrap gap-4">
           <Link
             to={window.location.hostname.startsWith('admin.') ? '/products' : '/admin/products'}
             className="px-4 py-3 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors text-center font-medium"
           >
             Thêm sản phẩm mới
           </Link>
-          <Link
-            to={window.location.hostname.startsWith('admin.') ? '/categories' : '/admin/categories'}
-            className="px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-center font-medium"
-          >
-            Thêm danh mục mới
-          </Link>
+          <p className="text-sm text-gray-500 self-center">
+            Danh mục thêm/chỉnh sửa từ dropdown trong form sản phẩm.
+          </p>
         </div>
       </div>
     </div>

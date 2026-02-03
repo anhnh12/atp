@@ -13,6 +13,9 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { uploadMultipleImages, deleteImage } from '../../utils/imageUpload';
+import CategoryDropdown from './CategoryDropdown';
+import Toast, { ToastType } from './Toast';
+import FileUploadZone from '../FileUploadZone';
 import { FiEdit, FiTrash2, FiArrowLeft, FiX } from 'react-icons/fi';
 
 interface Product {
@@ -49,10 +52,38 @@ const ProductManager: React.FC = () => {
     images: [] as string[],
   });
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+  const [initialFormData, setInitialFormData] = useState({
+    category_id: '',
+    name: '',
+    description: '',
+    inStock: true,
+    price: 0,
+    priceDisplay: '',
+    images: [] as string[],
+  });
 
   useEffect(() => {
     loadData();
   }, []);
+
+  const isFormDirty = (): boolean => {
+    if (
+      formData.category_id !== initialFormData.category_id ||
+      formData.name !== initialFormData.name ||
+      formData.description !== initialFormData.description ||
+      formData.inStock !== initialFormData.inStock ||
+      formData.priceDisplay !== initialFormData.priceDisplay ||
+      formData.images.length !== initialFormData.images.length ||
+      imageFiles.length > 0
+    ) {
+      return true;
+    }
+    if (formData.images.some((url, i) => url !== initialFormData.images[i])) {
+      return true;
+    }
+    return false;
+  };
 
   const loadData = async () => {
     try {
@@ -83,14 +114,13 @@ const ProductManager: React.FC = () => {
       setCategories(categoriesData);
     } catch (error) {
       console.error('Error loading data:', error);
-      alert('Lỗi khi tải dữ liệu');
+      setToast({ message: 'Lỗi khi tải dữ liệu', type: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  const handleImageFilesSelected = (files: File[]) => {
     setImageFiles((prev) => [...prev, ...files]);
   };
 
@@ -107,57 +137,38 @@ const ProductManager: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Validate before uploading so we never store images if the form is invalid or user aborts
+    if (!formData.category_id || formData.category_id.trim() === '') {
+      setToast({ message: 'Vui lòng chọn danh mục', type: 'error' });
+      return;
+    }
+    const selectedCategory = categories.find(cat => cat.id === formData.category_id);
+    if (!selectedCategory) {
+      setToast({ message: 'Vui lòng chọn danh mục hợp lệ. Danh mục không tồn tại.', type: 'error' });
+      return;
+    }
+
+    let newImageUrls: string[] = [];
     try {
       setUploading(true);
 
-      // Upload new images
-      let newImageUrls: string[] = [];
+      // Upload new images only after validation (so cancel before submit never uploads)
       if (imageFiles.length > 0) {
         const productId = editingId || 'temp';
         newImageUrls = await uploadMultipleImages(imageFiles, `products/${productId}`);
       }
 
-      // Combine existing and new image URLs
       const allImageUrls = [...formData.images, ...newImageUrls];
       const images = allImageUrls.map((url, index) => ({
         id: index + 1,
         url,
       }));
 
-      // Get category - use Firestore document ID directly
-      if (!formData.category_id || formData.category_id.trim() === '') {
-        alert('Vui lòng chọn danh mục');
-        setUploading(false);
-        return;
-      }
-      
-      const selectedCategory = categories.find(cat => cat.id === formData.category_id);
-      
-      if (!selectedCategory) {
-        console.error('Category not found:', {
-          selectedId: formData.category_id,
-          availableCategories: categories.map(c => ({ id: c.id, name: c.name }))
-        });
-        alert('Vui lòng chọn danh mục hợp lệ. Danh mục không tồn tại.');
-        setUploading(false);
-        return;
-      }
-      
-      // Use Firestore document ID as category_id (stored as string reference)
       const categoryId = selectedCategory.id;
-      
-      console.log('Selected category:', {
-        categoryId,
-        categoryName: selectedCategory.name,
-        formCategoryId: formData.category_id
-      });
-
-      // Parse price (remove commas for storage)
       const priceValue = parseFloat(formData.priceDisplay.replace(/,/g, '')) || formData.price;
 
-      // Prepare product data
       const productData: any = {
-        category_id: categoryId, // Use Firestore document ID
+        category_id: categoryId,
         name: formData.name.trim(),
         description: formData.description.trim(),
         inStock: formData.inStock,
@@ -167,31 +178,37 @@ const ProductManager: React.FC = () => {
         images,
         updated_at: Timestamp.now(),
       };
-      
-      // Only include price if it's provided and greater than 0
       if (priceValue > 0) {
         productData.price = priceValue;
       }
 
       if (editingId) {
-        // Update existing product
         const productRef = doc(db, 'products', editingId);
         await updateDoc(productRef, productData);
-        alert('Cập nhật sản phẩm thành công!');
+        setToast({ message: 'Cập nhật sản phẩm thành công!', type: 'success' });
       } else {
-        // Add new product
         await addDoc(collection(db, 'products'), {
           ...productData,
           created_at: Timestamp.now(),
         });
-        alert('Thêm sản phẩm thành công!');
+        setToast({ message: 'Thêm sản phẩm thành công!', type: 'success' });
       }
 
       resetForm();
       loadData();
     } catch (error: any) {
       console.error('Error saving product:', error);
-      alert(error.message || 'Lỗi khi lưu sản phẩm');
+      setToast({ message: error.message || 'Lỗi khi lưu sản phẩm', type: 'error' });
+      // If we uploaded images but save failed, remove them from Storage so they are not orphaned
+      if (newImageUrls.length > 0) {
+        for (const url of newImageUrls) {
+          try {
+            await deleteImage(url);
+          } catch (err) {
+            console.warn('Failed to delete orphaned image:', url, err);
+          }
+        }
+      }
     } finally {
       setUploading(false);
     }
@@ -199,19 +216,18 @@ const ProductManager: React.FC = () => {
 
   const handleEdit = (product: Product) => {
     setEditingId(product.id);
-    
-    // Find category by Firestore document ID (product.category_id is now the Firestore doc ID)
     const category = categories.find(cat => cat.id === product.category_id);
-    
-    setFormData({
-      category_id: category?.id || '', // Use Firestore document ID for dropdown
+    const data = {
+      category_id: category?.id || '',
       name: product.name,
       description: product.description,
       inStock: product.inStock !== undefined ? product.inStock : true,
       price: product.price || 0,
       priceDisplay: product.price ? formatPriceFromNumber(product.price) : '',
       images: product.images.map((img) => img.url),
-    });
+    };
+    setFormData(data);
+    setInitialFormData(data);
     setImageFiles([]);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -232,26 +248,36 @@ const ProductManager: React.FC = () => {
 
       // Delete product document
       await deleteDoc(doc(db, 'products', product.id));
-      alert('Xóa sản phẩm thành công!');
+      setToast({ message: 'Xóa sản phẩm thành công!', type: 'success' });
       loadData();
     } catch (error) {
       console.error('Error deleting product:', error);
-      alert('Lỗi khi xóa sản phẩm');
+      setToast({ message: 'Lỗi khi xóa sản phẩm', type: 'error' });
     }
   };
 
   const resetForm = () => {
-    setEditingId(null);
-    setFormData({
+    const empty = {
       category_id: '',
       name: '',
       description: '',
       inStock: true,
       price: 0,
       priceDisplay: '',
-      images: [],
-    });
+      images: [] as string[],
+    };
+    setEditingId(null);
+    setFormData(empty);
+    setInitialFormData(empty);
     setImageFiles([]);
+  };
+
+  const handleCancelClick = () => {
+    if (isFormDirty() && !window.confirm('Bạn có thay đổi chưa lưu. Bạn có chắc muốn hủy?')) {
+      return;
+    }
+    // Images are only uploaded on submit, so abort clears local state only; nothing to delete from Storage
+    resetForm();
   };
 
   const getCategoryName = (categoryId: string | number) => {
@@ -295,6 +321,13 @@ const ProductManager: React.FC = () => {
 
   return (
     <div>
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onDismiss={() => setToast(null)}
+        />
+      )}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Quản lý Sản phẩm</h1>
         <Link
@@ -316,19 +349,14 @@ const ProductManager: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Danh mục *
             </label>
-            <select
-              required
+            <CategoryDropdown
+              categories={categories}
+              onCategoriesChange={loadData}
               value={formData.category_id}
-              onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="">Chọn danh mục</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+              onChange={(categoryId) => setFormData((prev) => ({ ...prev, category_id: categoryId }))}
+              onShowToast={(message, type) => setToast({ message, type })}
+              required
+            />
           </div>
 
           <div>
@@ -392,19 +420,15 @@ const ProductManager: React.FC = () => {
 
           {/* Image Upload */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Hình ảnh sản phẩm
-            </label>
-            <input
-              type="file"
+            <FileUploadZone
+              onFilesSelected={handleImageFilesSelected}
               accept="image/*"
               multiple
-              onChange={handleImageFileChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              maxSize={5 * 1024 * 1024}
+              maxSizeLabel="5MB"
+              label="Hình ảnh sản phẩm"
+              hint="Có thể chọn nhiều hình ảnh. Kích thước tối đa: 5MB mỗi hình."
             />
-            <p className="mt-1 text-sm text-gray-500">
-              Có thể chọn nhiều hình ảnh. Kích thước tối đa: 5MB mỗi hình.
-            </p>
 
             {/* All images (existing + new) */}
             {(formData.images.length > 0 || imageFiles.length > 0) && (
@@ -461,7 +485,7 @@ const ProductManager: React.FC = () => {
             {editingId && (
               <button
                 type="button"
-                onClick={resetForm}
+                onClick={handleCancelClick}
                 className="px-6 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
               >
                 Hủy
